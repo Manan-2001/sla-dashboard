@@ -72,7 +72,7 @@ function jsonResponse(data: unknown, status = 200): Response {
 		status,
 		headers: {
 			'Content-Type': 'application/json',
-			'Access-Control-Allow-Origin': 'http://localhost:3000',
+			'Access-Control-Allow-Origin': '*',
 			'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 			'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 		},
@@ -750,7 +750,7 @@ export default {
 			return new Response(null, {
 				status: 204,
 				headers: {
-					'Access-Control-Allow-Origin': 'http://localhost:3000',
+					'Access-Control-Allow-Origin': '*',
 
 					'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 
@@ -803,91 +803,7 @@ export default {
 		// DEVELOPMENT ONLY
 		// ====================================
 
-		if (url.pathname === '/api/auth/setup' && method === 'POST') {
-			try {
-				const count = await env.sla_monitoring_db
-					.prepare(
-						`
-                            SELECT COUNT(*) AS count
-                            FROM admins
-                            `,
-					)
-					.first<{
-						count: number;
-					}>();
-
-				if (count && count.count > 0) {
-					return jsonResponse(
-						{
-							success: false,
-							message: 'Admin setup is already completed',
-						},
-						403,
-					);
-				}
-
-				const parsed = await parseJsonBody<{
-					email?: unknown;
-					password?: unknown;
-				}>(request);
-
-				if (!parsed.success) {
-					return parsed.response;
-				}
-
-				const { email, password } = parsed.data;
-
-				if (!isValidNonEmptyString(email)) {
-					return validationError('Email is required');
-				}
-
-				if (!isValidNonEmptyString(password)) {
-					return validationError('Password is required');
-				}
-
-				if ((password as string).length < 8) {
-					return validationError('Password must be at least 8 characters');
-				}
-
-				const normalizedEmail = (email as string).trim().toLowerCase();
-
-				const passwordHash = await hashPassword(password as string);
-
-				const result = await env.sla_monitoring_db
-					.prepare(
-						`
-                            INSERT INTO admins (
-                                email,
-                                password_hash,
-                                role,
-                                enabled
-                            )
-                            VALUES (?, ?, 'admin', 1)
-                            RETURNING
-                                id,
-                                email,
-                                role,
-                                enabled,
-                                created_at
-                            `,
-					)
-					.bind(normalizedEmail, passwordHash)
-					.first();
-
-				return jsonResponse(
-					{
-						success: true,
-						message: 'Admin created successfully',
-						data: result,
-					},
-					201,
-				);
-			} catch (error) {
-				console.error('Auth setup error:', error);
-
-				return internalError('Failed to create admin');
-			}
-		}
+		
 
 		// ====================================
 		// LOGIN
