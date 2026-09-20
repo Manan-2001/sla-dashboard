@@ -1,0 +1,24 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+
+    "name": "sla-monitoring-worker",
+
+    "main": "src/index.ts",
+
+    "compatibility_date": "2026-09-16",
+
+    "d1_databases": [
+        {
+            "binding": "sla_monitoring_db",
+            "database_name": "sla-monitoring-db",
+            "database_id": "42d11393-c94f-45d4-a880-1225397e00d3",
+            "remote": false
+        }
+    ],
+
+    "triggers": {
+        "crons": [
+            "*/5 * * * *"
+        ]
+    }
+}
